@@ -1,0 +1,333 @@
+<html>
+  <head>
+    <link rel="icon" href="files/asteroid1.png">
+    <title>
+      Avoid The Asteroids
+    </title>
+  </head>
+  <style>
+
+    body{
+      font-family:arial;
+      background-color:	#030409;
+      overflow:hidden;
+    }
+
+    #container{
+      background-image: url("files/space.gif");
+      background-repeat: repeat;
+      background-attachment: fixed;
+      background-position:0% 40%;
+      position:absolute;
+      width:700px;
+      height:400px;
+      border:1px solid black;
+      left:50%;
+      top:50%;
+      margin-left:-350px;
+      margin-top:-200px;
+    }
+
+    #cursor{
+      background-image: url("files/spaceship.gif");
+      position:absolute;
+      width:67;
+      margin-left:-47;
+      height:20;
+      left:75px;
+      top:75px;
+    }
+
+    .asteroid {
+      position:absolute;
+      left: 800px;
+      top:50px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_1{
+      background-image: url("files/asteroid1.png");
+      position:absolute;
+      left: 800px;
+      top:50px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_2{
+      background-image: url("files/asteroid2.png");
+      position:absolute;
+      left: 800px;
+      top:100px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_3{
+      background-image: url("files/asteroid3.png");
+      position:absolute;
+      left: 800px;
+      top:150px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_4{
+      background-image: url("files/asteroid4.png");
+      position:absolute;
+      left: 800px;
+      top:200px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_5{
+      background-image: url("files/asteroid5.png");
+      position:absolute;
+      left: 800px;
+      top:250px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #asteroid_6{
+      background-image: url("files/asteroid6.png");
+      position:absolute;
+      left: 800px;
+      top:300px;
+      width:40px;
+      height:40px;
+      display:none;
+    }
+
+    #button_menu{
+      user-select: none;
+      position:absolute;
+      width:350px;
+      height:50px;
+      left:50%;
+      margin-left:-175px;
+      top:50%;
+      margin-top:-260px;
+      color:white;
+    }
+
+    #start{
+      position:absolute;
+      width:75px;
+      height:30px;
+      left:10px;
+      top:10px;
+      border-radius:10px;
+      border:2px solid white;
+      text-align:center;
+      font-size:27;
+    }
+
+    #stats{
+      position:absolute;
+      width:75px;
+      height:30px;
+      right:10px;
+      top:10px;
+      border-radius:10px;
+      border:2px solid white;
+      text-align:center;
+      font-size:27;
+    }
+
+    #time{
+      position:absolute;
+      width:100px;
+      height:50px;
+      left:50%;
+      margin-left:-50px;
+    }
+
+    .white{
+      position:absolute;
+      top:50%;
+      margin-top:210px;
+      color:white;
+      width:100%;
+    }
+
+  </style>
+  <body>
+    <div id="button_menu">
+      <div id="start" onclick="start()">Start</div>
+      <div id="stats" onclick="stats()">Stats</div>
+      <div id="time">
+        <center>
+          Score
+          <br>
+          <b>
+            <span id="score"></span>
+          </b>
+        </center>
+      </div>
+    </div>
+
+    <div id="container" onmousemove="mouseMove()">
+
+      <div id="cursor"></div>
+      <div id="asteroid_1"></div>
+      <div id="asteroid_2"></div>
+      <div id="asteroid_3"></div>
+      <div id="asteroid_4"></div>
+      <div id="asteroid_5"></div>
+      <div id="asteroid_6"></div>
+
+    </div>
+    <div class="white">
+      <center>
+        <b> | </b> 0 - 100: bad <b> | </b> 100 - 175: okay <b> | </b> 175 - 225: good <b> | </b> 225 - 275: great <b> | </b> 275+: insane <b> | </b>
+      </center>
+    </div>
+  </body>
+  <script>
+
+    var DIFFICULTY = 5; //1 to 10 | 1 being easy & 10 being hard
+    var SPEED = 10; //lower is faster | in milliseconds
+    var XMOVEMENT = 3; //the divider used to slow down ship on x axis | lower the number = more movement on x-axis
+    var INITIALMOVESPEED = 1; //amount of pixels asteroids move left at start of game
+
+    var spaceLeft = 0;
+    var spaceRight = 40;
+    var isPlaying = "false";
+    var mousePos = [0, 0];
+    var spaceshipPos = [75, 0];
+    var asteroidPos = [
+      [600, 50],
+      [500, 100],
+      [400, 150],
+      [300, 200],
+      [200, 250],
+      [100, 300]
+    ];
+    var time = 0;
+    var moveSpeed = 1;
+    var pastScores = [];
+
+    function start(){
+      resetVars();
+
+      //sets asteroid positions
+      asteroidPos = [
+        [800, Math.random()*360],
+        [700, Math.random()*360],
+        [600, Math.random()*360],
+        [500, Math.random()*360],
+        [400, Math.random()*360],
+        [300, Math.random()*360]
+      ];
+
+      //makes asteroid elements visible
+      for(var i = 1; i < 7; i++){
+        makeVisible("asteroid_" + i);
+      }
+    }
+
+    function resetVars(){
+      time = 0;
+      isPlaying = "true";
+    }
+
+    function makeVisible(asteroid){
+      document.getElementById(asteroid).style.display = "block";
+    }
+
+    function stats(){
+      var roundsPlayed = pastScores.length;
+      var highScore = 0;
+      var avgScore = 0;
+      for(var i = 0; i < pastScores.length; i++){
+        avgScore = avgScore + pastScores[i];
+        if(pastScores[i] > highScore){
+          highScore = Math.floor(pastScores[i]);
+        }
+      }
+      avgScore = Math.floor(avgScore / roundsPlayed);
+      alert("You have played " + roundsPlayed + " rounds. Your average score is " +
+            avgScore + ". The high score is " + highScore + ". Good Job!");
+    }
+
+    setInterval(function(){
+      if(isPlaying === "true"){
+        var asteroids = [document.getElementById('asteroid_1'), document.getElementById('asteroid_2'), document.getElementById('asteroid_3'), document.getElementById('asteroid_4'), document.getElementById('asteroid_5'), document.getElementById("asteroid_6")];
+        for(var i = 0; i < asteroids.length; i++){
+          asteroidPos[i][0] = asteroidPos[i][0] - moveSpeed;
+          asteroids[i].style.left = asteroidPos[i][0];
+          asteroids[i].style.top = asteroidPos[i][1];
+          if(asteroidPos[i][0] < 0){
+            asteroidPos[i][1] = Math.random()*360;
+            asteroidPos[i][0] = 650 + (asteroidPos[i][0]);
+          }
+        }
+
+        moveSpeed = INITIALMOVESPEED + (time/(10/DIFFICULTY));
+        time = time + 0.01;
+
+        document.getElementById("score").innerText = Math.floor(time * 10);
+
+        if(collisionDetection(asteroidPos, mousePos) === "true"){
+            endRound(time * 10);
+        }
+        spaceLeft = spaceLeft - 0.1;
+        spaceRight = spaceRight + 0.005;
+        document.getElementById("container").style.backgroundPosition =  spaceLeft + "%" + spaceRight + "%";
+      }
+    }, SPEED)
+
+    function collisionDetection(asteroid, mouse){
+      var collides = "false";
+      for(var i = 0; i < asteroid.length; i++){
+         if(Math.abs((asteroid[i][0] + 20) - (mouse[0] + 10)) < 20){
+           if(Math.abs((asteroid[i][1] + 20) - (mouse[1] + 10)) < 20){
+             collides = "true";
+           }
+         }
+       }
+       return(collides);
+    }
+
+    function endRound(score){
+      pastScores.push(score);
+      isPlaying = "false";
+      var scoreRank;
+        if(score < 100){scoreRank = "You did bad."}
+        else {if(score < 175){scoreRank = "You did okay."}
+        else {if(score < 225){scoreRank = "You did good!"}
+        else {if(score < 275){scoreRank = "You did great!!!"}
+        else {scoreRank = "You did Insane!!!!!"}}}}
+      alert("You have crashed! Your score was " + Math.floor(score) + ". " + scoreRank);
+      document.getElementById("asteroid_1").style.display = "none";
+      document.getElementById("asteroid_2").style.display = "none";
+      document.getElementById("asteroid_3").style.display = "none";
+      document.getElementById("asteroid_4").style.display = "none";
+      document.getElementById("asteroid_5").style.display = "none";
+      document.getElementById("asteroid_6").style.display = "none";
+    }
+
+    function mouseMove(){
+      var offsetY = (window.innerHeight/2) - 200;
+      var offsetX = (window.innerWidth/2) - 350;
+
+      mousePos = [40 + ((event.clientX - offsetX)/XMOVEMENT), (event.clientY - offsetY)];
+
+      if(mousePos[1] < 10){mousePos[1] = 10};
+      if(mousePos[1] > 370){mousePos[1] = 370};
+
+      document.getElementById("cursor").style.left = mousePos[0];
+      document.getElementById("cursor").style.top = mousePos[1];
+    }
+
+  </script>
+<html>
